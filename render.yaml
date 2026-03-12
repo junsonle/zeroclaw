@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: zeroclaw
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    startCommand: zeroclaw daemon
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        value: YOUR_BOT_TOKEN_HERE   # ← điền token mới (đã revoke token cũ chưa?)
+      - key: ANTHROPIC_API_KEY
+        value: YOUR_API_KEY_HERE
+      - key: ZEROCLAW_GATEWAY_PORT
+        value: "10000"               # Render dùng port 10000
+    disk:
+      name: zeroclaw-data
+      mountPath: /zeroclaw-data
+      sizeGB: 1
