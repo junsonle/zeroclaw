@@ -7,8 +7,8 @@ description = "Memory backends, embeddings, consolidation, and retrieval for Zer
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api" }
-zeroclaw-config = { path = "../zeroclaw-config" }
+zeroclaw-api.workspace = true
+zeroclaw-config = { workspace = true, default-features = true }
 anyhow = "1.0"
 async-trait = "0.1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }

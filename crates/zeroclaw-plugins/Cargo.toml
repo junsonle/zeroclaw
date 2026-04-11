@@ -7,7 +7,7 @@ description = "WASM plugin system for ZeroClaw — host, manifests, signatures, 
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api", version = "0.1.0" }
+zeroclaw-api.workspace = true
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.22"

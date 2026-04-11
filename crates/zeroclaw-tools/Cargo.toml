@@ -7,11 +7,11 @@ description = "Tool implementations for agent-callable capabilities."
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api" }
-zeroclaw-config = { path = "../zeroclaw-config" }
-zeroclaw-providers = { path = "../zeroclaw-providers" }
-zeroclaw-memory = { path = "../zeroclaw-memory" }
-zeroclaw-infra = { path = "../zeroclaw-infra" }
+zeroclaw-api.workspace = true
+zeroclaw-config = { workspace = true, default-features = true }
+zeroclaw-providers.workspace = true
+zeroclaw-memory.workspace = true
+zeroclaw-infra.workspace = true
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.22"
@@ -49,7 +49,7 @@ rag-pdf = ["dep:pdf-extract"]
 probe = ["dep:probe-rs"]
 
 [dev-dependencies]
-zeroclaw-infra = { path = "../zeroclaw-infra" }
+zeroclaw-infra.workspace = true
 tempfile = "3.26"
 tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 wiremock = "0.6"

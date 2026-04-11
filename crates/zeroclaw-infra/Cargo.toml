@@ -7,7 +7,7 @@ description = "Channel infrastructure: session backends, debouncing, stall watch
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api" }
+zeroclaw-api.workspace = true
 anyhow = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 parking_lot = "0.12"

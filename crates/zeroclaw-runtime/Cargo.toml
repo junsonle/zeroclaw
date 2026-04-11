@@ -7,14 +7,14 @@ description = "Miscellaneous ZeroClaw subsystems: security, observability, gatew
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api" }
-zeroclaw-infra = { path = "../zeroclaw-infra" }
-zeroclaw-config = { path = "../zeroclaw-config", default-features = false }
-zeroclaw-providers = { path = "../zeroclaw-providers" }
-zeroclaw-memory = { path = "../zeroclaw-memory" }
-zeroclaw-tools = { path = "../zeroclaw-tools" }
-zeroclaw-plugins = { path = "../zeroclaw-plugins", optional = true }
-zeroclaw-tool-call-parser = { path = "../zeroclaw-tool-call-parser" }
+zeroclaw-api.workspace = true
+zeroclaw-infra.workspace = true
+zeroclaw-config.workspace = true
+zeroclaw-providers.workspace = true
+zeroclaw-memory.workspace = true
+zeroclaw-tools.workspace = true
+zeroclaw-plugins = { workspace = true, optional = true }
+zeroclaw-tool-call-parser.workspace = true
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.22"
@@ -68,10 +68,10 @@ uuid = { version = "1.22", default-features = false, features = ["v4", "std"] }
 webpki-roots = "1.0.6"
 which = "8.0"
 zip = { version = "8.1", default-features = false, features = ["deflate-flate2"] }
-zeroclaw-macros = { path = "../zeroclaw-macros" }
+zeroclaw-macros.workspace = true
 
 # Optional deps
-aardvark-sys = { path = "../aardvark-sys", version = "0.1.0" }
+aardvark-sys.workspace = true
 prometheus = { version = "0.14", default-features = false, optional = true }
 opentelemetry = { version = "0.31", default-features = false, features = ["trace", "metrics"], optional = true }
 opentelemetry_sdk = { version = "0.31", default-features = false, features = ["trace", "metrics"], optional = true }

@@ -1,6 +1,6 @@
 [package]
 name = "zeroclaw-api"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Trait definitions and shared types for ZeroClaw — the API layer."

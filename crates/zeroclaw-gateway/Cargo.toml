@@ -8,16 +8,16 @@ publish = false
 
 [dependencies]
 # Internal workspace crates
-zeroclaw-api = { path = "../zeroclaw-api", version = "0.1.0" }
-zeroclaw-config = { path = "../zeroclaw-config", version = "0.6.9", default-features = false }
-zeroclaw-infra = { path = "../zeroclaw-infra", version = "0.6.9" }
-zeroclaw-memory = { path = "../zeroclaw-memory", version = "0.6.9" }
-zeroclaw-providers = { path = "../zeroclaw-providers", version = "0.6.9" }
-zeroclaw-channels = { path = "../zeroclaw-channels", version = "0.6.9", features = ["channel-email", "channel-telegram"] }
-zeroclaw-runtime = { path = "../zeroclaw-runtime", version = "0.6.9", default-features = false }
-zeroclaw-tools = { path = "../zeroclaw-tools", version = "0.6.9" }
-zeroclaw-hardware = { path = "../zeroclaw-hardware", version = "0.6.9" }
-zeroclaw-plugins = { path = "../zeroclaw-plugins", version = "0.6.9", optional = true }
+zeroclaw-api.workspace = true
+zeroclaw-config.workspace = true
+zeroclaw-infra.workspace = true
+zeroclaw-memory.workspace = true
+zeroclaw-providers.workspace = true
+zeroclaw-channels = { workspace = true, default-features = true, features = ["channel-email", "channel-telegram"] }
+zeroclaw-runtime.workspace = true
+zeroclaw-tools.workspace = true
+zeroclaw-hardware.workspace = true
+zeroclaw-plugins = { workspace = true, optional = true }
 
 # HTTP server
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query", "ws", "macros"] }

@@ -9,6 +9,23 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/zeroclaw-labs/zeroclaw"
 rust-version = "1.87"
 
+[workspace.dependencies]
+zeroclaw-api = { path = "crates/zeroclaw-api", version = "0.6.9" }
+zeroclaw-infra = { path = "crates/zeroclaw-infra", version = "0.6.9" }
+zeroclaw-config = { path = "crates/zeroclaw-config", version = "0.6.9", default-features = false }
+zeroclaw-providers = { path = "crates/zeroclaw-providers", version = "0.6.9" }
+zeroclaw-memory = { path = "crates/zeroclaw-memory", version = "0.6.9" }
+zeroclaw-channels = { path = "crates/zeroclaw-channels", version = "0.6.9", default-features = false }
+zeroclaw-tools = { path = "crates/zeroclaw-tools", version = "0.6.9" }
+zeroclaw-runtime = { path = "crates/zeroclaw-runtime", version = "0.6.9", default-features = false }
+zeroclaw-tui = { path = "crates/zeroclaw-tui", version = "0.6.9" }
+zeroclaw-plugins = { path = "crates/zeroclaw-plugins", version = "0.6.9" }
+zeroclaw-gateway = { path = "crates/zeroclaw-gateway", version = "0.6.9" }
+zeroclaw-hardware = { path = "crates/zeroclaw-hardware", version = "0.6.9" }
+zeroclaw-tool-call-parser = { path = "crates/zeroclaw-tool-call-parser", version = "0.6.9" }
+zeroclaw-macros = { path = "crates/zeroclaw-macros", version = "0.6.9" }
+aardvark-sys = { path = "crates/aardvark-sys", version = "0.1.0" }
+
 [package]
 name = "zeroclawlabs"
 version.workspace = true
@@ -41,22 +58,21 @@ name = "zeroclaw"
 path = "src/lib.rs"
 
 [dependencies]
-# Internal workspace crates
-zeroclaw-api = { path = "crates/zeroclaw-api" }
-zeroclaw-infra = { path = "crates/zeroclaw-infra" }
-zeroclaw-config = { path = "crates/zeroclaw-config", default-features = false }
-zeroclaw-providers = { path = "crates/zeroclaw-providers" }
-zeroclaw-memory = { path = "crates/zeroclaw-memory" }
-zeroclaw-channels = { path = "crates/zeroclaw-channels", default-features = false, optional = true }
-zeroclaw-tools = { path = "crates/zeroclaw-tools", optional = true }
-zeroclaw-runtime = { path = "crates/zeroclaw-runtime", default-features = false, optional = true }
-zeroclaw-tui = { path = "crates/zeroclaw-tui", optional = true }
-zeroclaw-plugins = { path = "crates/zeroclaw-plugins", optional = true }
-zeroclaw-gateway = { path = "crates/zeroclaw-gateway", optional = true }
-zeroclaw-hardware = { path = "crates/zeroclaw-hardware", optional = true }
-zeroclaw-tool-call-parser = { path = "crates/zeroclaw-tool-call-parser" }
-# Internal proc macros
-zeroclaw-macros = { path = "crates/zeroclaw-macros" }
+# Internal workspace crates — versions and paths declared once in [workspace.dependencies]
+zeroclaw-api.workspace = true
+zeroclaw-infra.workspace = true
+zeroclaw-config.workspace = true
+zeroclaw-providers.workspace = true
+zeroclaw-memory.workspace = true
+zeroclaw-channels = { workspace = true, optional = true }
+zeroclaw-tools = { workspace = true, optional = true }
+zeroclaw-runtime = { workspace = true, optional = true }
+zeroclaw-tui = { workspace = true, optional = true }
+zeroclaw-plugins = { workspace = true, optional = true }
+zeroclaw-gateway = { workspace = true, optional = true }
+zeroclaw-hardware = { workspace = true, optional = true }
+zeroclaw-tool-call-parser.workspace = true
+zeroclaw-macros.workspace = true
 # CLI - minimal and fast
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
@@ -115,7 +131,7 @@ anyhow = "1.0"
 thiserror = "2.0"
 
 # Aardvark I2C/SPI/GPIO USB adapter (Total Phase) — stub when SDK absent
-aardvark-sys = { path = "crates/aardvark-sys", version = "0.1.0" }
+aardvark-sys.workspace = true
 
 # UUID generation
 uuid = { version = "1.22", default-features = false, features = ["v4", "std"] }

@@ -7,13 +7,13 @@ description = "Channel implementations for messaging platform integrations."
 publish = false
 
 [dependencies]
-zeroclaw-api = { path = "../zeroclaw-api" }
-zeroclaw-infra = { path = "../zeroclaw-infra" }
-zeroclaw-config = { path = "../zeroclaw-config" }
-zeroclaw-memory = { path = "../zeroclaw-memory" }
-zeroclaw-providers = { path = "../zeroclaw-providers" }
-zeroclaw-runtime = { path = "../zeroclaw-runtime", default-features = false }
-zeroclaw-tools = { path = "../zeroclaw-tools" }
+zeroclaw-api.workspace = true
+zeroclaw-infra.workspace = true
+zeroclaw-config = { workspace = true, default-features = true }
+zeroclaw-memory.workspace = true
+zeroclaw-providers.workspace = true
+zeroclaw-runtime.workspace = true
+zeroclaw-tools.workspace = true
 anyhow = "1.0"
 lru = "0.16"
 rumqttc = "0.24"
