@@ -96,4 +96,4 @@ WORKDIR /zeroclaw-data
 USER 65534:65534
 EXPOSE 42617
 ENTRYPOINT ["zeroclaw"]
-CMD ["gateway"]
+CMD ["daemon"]
