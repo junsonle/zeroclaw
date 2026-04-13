@@ -34,19 +34,18 @@ RUN mkdir -p src benches \
     && echo "fn main() {}" > apps/tauri/build.rs \
     && echo "pub fn placeholder() {}" > apps/tauri/src/lib.rs
 
-# 3. Build dependencies (cache trick)
+# 3. Build dependencies (cache trick, bỏ qua lỗi)
 RUN cargo build --release --locked --bin zeroclaw || true
 
 # 4. Xóa dummy source của các crate chính (giữ lại apps/tauri/src)
 RUN rm -rf src benches crates/robot-kit/src crates/aardvark-sys/src crates/zeroclaw-macros/src
 
-# 5. Copy source thật (CHÚ Ý: KHÔNG COPY apps/)
+# 5. Copy source thật (KHÔNG copy apps/ và KHÔNG dùng *.rs)
 COPY src/ src/
 COPY benches/ benches/
 COPY crates/ crates/
 COPY firmware/ firmware/
 COPY web/ web/
-COPY *.rs . 2>/dev/null || true
 
 # 6. Đảm bảo thư mục web/dist tồn tại
 RUN mkdir -p web/dist && \
