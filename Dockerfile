@@ -6,8 +6,8 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 WORKDIR /app
 
 # Install build dependencies
-RUN --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a/settings?environmentId=dd3f71a2-4a3b-47b8-921e-d195068ece7c,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a/settings?environmentId=dd3f71a2-4a3b-47b8-921e-d195068ece7c,target=/var/lib/apt,sharing=locked \
+RUN --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a/settings?environmentId=dd3f71a2-4a3b-47b8-921e-d195068ece7c-/var/cache/apt,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a/settings?environmentId=dd3f71a2-4a3b-47b8-921e-d195068ece7c-/var/cache/apt,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
