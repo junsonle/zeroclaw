@@ -14,36 +14,44 @@ FROM rust:1.94-slim@sha256:da9dab7a6b8dd428e71718402e97207bb3e54167d37b570861605
 WORKDIR /app
 ARG ZEROCLAW_CARGO_FEATURES="channel-lark,whatsapp-web"
 
-# 1. Copy manifests to cache dependencies
+# Cài đặt system dependencies (KHÔNG dùng cache mount để tránh lỗi Railway)
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1. Copy manifests
 COPY Cargo.toml Cargo.lock ./
-# Include every workspace member: Cargo.lock is generated for the full workspace.
-# Previously we used sed to drop `crates/robot-kit`, which made the manifest disagree
-# with the lockfile and caused `cargo --locked` to fail (Cargo refused to rewrite the lock).
 COPY crates/robot-kit/ crates/robot-kit/
 COPY crates/aardvark-sys/ crates/aardvark-sys/
-# Include tauri workspace member manifest (desktop app, but needed for workspace resolution).
-# .dockerignore whitelists only Cargo.toml; src and build.rs are stubbed below.
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
-# Create dummy targets declared in Cargo.toml so manifest parsing succeeds.
+
+# 2. Tạo dummy source để cache dependencies
 RUN mkdir -p src benches apps/tauri/src \
     && echo "fn main() {}" > src/main.rs \
     && echo "" > src/lib.rs \
     && echo "fn main() {}" > benches/agent_benchmarks.rs \
     && echo "fn main() {}" > apps/tauri/src/main.rs \
     && echo "fn main() {}" > apps/tauri/build.rs
-RUN rm -rf src benches
 
-# 2. Copy only build-relevant source paths (avoid cache-busting on docs/tests/scripts)
+# 3. Build dependencies (trick để cache)
+RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} || true
+
+# 4. Xóa dummy source và copy source thật
+RUN rm -rf src benches
 COPY src/ src/
 COPY benches/ benches/
 COPY *.rs .
 RUN touch src/main.rs
-# Build binary (bước bị thiếu)
+
+# 5. Build binary cuối cùng
 RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} \
     && cp target/release/zeroclaw /app/zeroclaw
-    
+
+# 6. Kiểm tra binary
 RUN size=$(stat -c%s /app/zeroclaw) && \
-    if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes), likely dummy build artifact" && exit 1; fi
+    if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes)" && exit 1; fi
 
 # Prepare runtime directory structure and default config inline (no extra stage)
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
