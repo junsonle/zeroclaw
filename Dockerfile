@@ -6,9 +6,7 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 WORKDIR /app
 
 # Install build dependencies
-RUN --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a-/var/cache/apt,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=s/be33126e-3464-4bb2-93e3-b0f511c97e3a-/var/lib/apt,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
