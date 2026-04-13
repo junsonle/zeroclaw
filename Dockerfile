@@ -19,7 +19,7 @@ COPY crates/aardvark-sys/Cargo.toml crates/aardvark-sys/Cargo.toml
 COPY crates/zeroclaw-macros/Cargo.toml crates/zeroclaw-macros/Cargo.toml
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# 2. Create dummy source files for all members (ĐÃ SỬA: tạo thư mục src trước)
+# 2. Create dummy source files for all members (ĐÃ SỬA: thêm file giả cho apps/tauri)
 RUN mkdir -p src benches \
     crates/robot-kit/src \
     crates/aardvark-sys/src \
@@ -31,7 +31,8 @@ RUN mkdir -p src benches \
     && echo "pub fn placeholder() {}" > crates/aardvark-sys/src/lib.rs \
     && echo "pub fn placeholder() {}" > crates/zeroclaw-macros/src/lib.rs \
     && echo "fn main() {}" > apps/tauri/src/main.rs \
-    && echo "fn main() {}" > apps/tauri/build.rs
+    && echo "fn main() {}" > apps/tauri/build.rs \
+    && echo "pub fn placeholder() {}" > apps/tauri/src/lib.rs
 
 # 3. Pre-build dependencies (cache trick)
 RUN cargo build --release --locked || true
