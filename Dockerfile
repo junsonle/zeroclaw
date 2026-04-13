@@ -14,20 +14,20 @@ FROM rust:1.94-slim@sha256:da9dab7a6b8dd428e71718402e97207bb3e54167d37b570861605
 WORKDIR /app
 ARG ZEROCLAW_CARGO_FEATURES="channel-lark,whatsapp-web"
 
-# Cài đặt system dependencies (KHÔNG dùng cache mount để tránh lỗi Railway)
+# Cài đặt system dependencies (KHÔNG cache mount để tránh lỗi Railway)
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 1. Copy manifests
+# Copy manifests
 COPY Cargo.toml Cargo.lock ./
 COPY crates/robot-kit/ crates/robot-kit/
 COPY crates/aardvark-sys/ crates/aardvark-sys/
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# 2. Tạo dummy source để cache dependencies
+# Tạo dummy source để cache dependencies
 RUN mkdir -p src benches apps/tauri/src \
     && echo "fn main() {}" > src/main.rs \
     && echo "" > src/lib.rs \
@@ -35,21 +35,21 @@ RUN mkdir -p src benches apps/tauri/src \
     && echo "fn main() {}" > apps/tauri/src/main.rs \
     && echo "fn main() {}" > apps/tauri/build.rs
 
-# 3. Build dependencies (trick để cache)
+# Build dependencies (trick cache)
 RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} || true
 
-# 4. Xóa dummy source và copy source thật
+# Xóa dummy và copy source thật
 RUN rm -rf src benches
 COPY src/ src/
 COPY benches/ benches/
 COPY *.rs .
 RUN touch src/main.rs
 
-# 5. Build binary cuối cùng
-RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} \
+# Build binary cuối cùng (bật verbose để debug nếu cần)
+RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} --verbose \
     && cp target/release/zeroclaw /app/zeroclaw
 
-# 6. Kiểm tra binary
+# Kiểm tra binary
 RUN size=$(stat -c%s /app/zeroclaw) && \
     if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes)" && exit 1; fi
 
