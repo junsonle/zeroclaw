@@ -5,7 +5,7 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 
 WORKDIR /app
 
-# Install build dependencies (KHÔNG cache mount)
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
         pkg-config \
         libssl-dev \
@@ -19,7 +19,7 @@ COPY crates/aardvark-sys/Cargo.toml crates/aardvark-sys/Cargo.toml
 COPY crates/zeroclaw-macros/Cargo.toml crates/zeroclaw-macros/Cargo.toml
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# 2. Create dummy source files for all members (ĐÃ SỬA: thêm file giả cho apps/tauri)
+# 2. Create dummy source files for all members
 RUN mkdir -p src benches \
     crates/robot-kit/src \
     crates/aardvark-sys/src \
@@ -35,7 +35,7 @@ RUN mkdir -p src benches \
     && echo "pub fn placeholder() {}" > apps/tauri/src/lib.rs
 
 # 3. Pre-build dependencies (cache trick)
-RUN cargo build --release --locked || true
+RUN cargo build --release --locked --bin zeroclaw || true
 
 # 4. Clean up dummy sources and copy REAL sources
 RUN rm -rf src benches \
@@ -62,8 +62,8 @@ RUN mkdir -p web/dist && \
         '</html>' > web/dist/index.html; \
     fi
 
-# 6. Build final binary
-RUN cargo build --release --locked \
+# 6. Build final binary (CHỈ BUILD ZEROCLAW)
+RUN cargo build --release --locked --bin zeroclaw \
     && cp target/release/zeroclaw /app/zeroclaw \
     && strip /app/zeroclaw
 
