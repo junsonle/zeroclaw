@@ -5,37 +5,43 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 
 WORKDIR /app
 
-# Install build dependencies (KHÔNG cache mount)
+# Install build dependencies (Đã loại bỏ cache mount)
 RUN apt-get update && apt-get install -y \
         pkg-config \
         libssl-dev \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 1. Copy manifests to cache dependencies
+# 1. Copy ALL workspace member manifests (ĐÃ SỬA)
 COPY Cargo.toml Cargo.lock ./
 COPY crates/robot-kit/Cargo.toml crates/robot-kit/Cargo.toml
+COPY crates/aardvark-sys/Cargo.toml crates/aardvark-sys/Cargo.toml
+COPY crates/zeroclaw-macros/Cargo.toml crates/zeroclaw-macros/Cargo.toml
+COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# Create dummy targets
-RUN mkdir -p src benches crates/robot-kit/src \
-    && echo "fn main() {}" > src/main.rs \
-    && echo "fn main() {}" > benches/agent_benchmarks.rs \
-    && echo "pub fn placeholder() {}" > crates/robot-kit/src/lib.rs
+# 2. Create dummy source files for all members to cache dependencies
+RUN mkdir -p src benches && \
+    echo "fn main() {}" > src/main.rs && \
+    echo "fn main() {}" > benches/agent_benchmarks.rs && \
+    echo "pub fn placeholder() {}" > crates/robot-kit/src/lib.rs && \
+    echo "pub fn placeholder() {}" > crates/aardvark-sys/src/lib.rs && \
+    echo "pub fn placeholder() {}" > crates/zeroclaw-macros/src/lib.rs && \
+    echo "fn main() {}" > apps/tauri/src/main.rs && \
+    echo "fn main() {}" > apps/tauri/build.rs
 
-# Build dependencies (KHÔNG cache mount)
+# 3. Pre-build dependencies (Đã loại bỏ cache mount)
 RUN cargo build --release --locked || true
 
-# Xóa dummy source
-RUN rm -rf src benches crates/robot-kit/src
-
-# 2. Copy source thật
+# 4. Clean up dummy sources and copy REAL sources
+RUN rm -rf src benches crates/robot-kit/src crates/aardvark-sys/src crates/zeroclaw-macros/src apps/tauri/src apps/tauri/build.rs
 COPY src/ src/
 COPY benches/ benches/
 COPY crates/ crates/
+COPY apps/ apps/
 COPY firmware/ firmware/
 COPY web/ web/
 
-# Tạo web/dist tạm nếu thiếu
+# 5. Ensure web/dist exists
 RUN mkdir -p web/dist && \
     if [ ! -f web/dist/index.html ]; then \
       printf '%s\n' \
@@ -46,12 +52,12 @@ RUN mkdir -p web/dist && \
         '</html>' > web/dist/index.html; \
     fi
 
-# Build binary cuối cùng (KHÔNG cache mount)
+# 6. Build final binary (Đã loại bỏ cache mount)
 RUN cargo build --release --locked \
     && cp target/release/zeroclaw /app/zeroclaw \
     && strip /app/zeroclaw
 
-# Prepare runtime directory
+# 7. Prepare runtime directory structure
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
     printf '%s\n' \
         'workspace_dir = "/zeroclaw-data/workspace"' \
