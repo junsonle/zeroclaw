@@ -5,21 +5,21 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 
 WORKDIR /app
 
-# Install build dependencies
+# Cài đặt dependencies hệ thống (không cache mount)
 RUN apt-get update && apt-get install -y \
         pkg-config \
         libssl-dev \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 1. Copy ALL workspace member manifests
+# 1. Copy toàn bộ manifest của workspace
 COPY Cargo.toml Cargo.lock ./
 COPY crates/robot-kit/Cargo.toml crates/robot-kit/Cargo.toml
 COPY crates/aardvark-sys/Cargo.toml crates/aardvark-sys/Cargo.toml
 COPY crates/zeroclaw-macros/Cargo.toml crates/zeroclaw-macros/Cargo.toml
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# 2. Create dummy source files for all members
+# 2. Tạo dummy source để cache dependencies (bao gồm cả apps/tauri)
 RUN mkdir -p src benches \
     crates/robot-kit/src \
     crates/aardvark-sys/src \
@@ -34,40 +34,34 @@ RUN mkdir -p src benches \
     && echo "fn main() {}" > apps/tauri/build.rs \
     && echo "pub fn placeholder() {}" > apps/tauri/src/lib.rs
 
-# 3. Pre-build dependencies (cache trick)
+# 3. Build dependencies (cache trick, bỏ qua lỗi nếu có)
 RUN cargo build --release --locked --bin zeroclaw || true
 
-# 4. Clean up dummy sources and copy REAL sources
-RUN rm -rf src benches \
-    crates/robot-kit/src \
-    crates/aardvark-sys/src \
-    crates/zeroclaw-macros/src \
-    apps/tauri/src \
-    apps/tauri/build.rs
+# 4. Xóa dummy source của các crate chính, NHƯNG GIỮ LẠI apps/tauri/src
+RUN rm -rf src benches crates/robot-kit/src crates/aardvark-sys/src crates/zeroclaw-macros/src
+
+# 5. Copy source thật (CHÚ Ý: KHÔNG copy apps/)
 COPY src/ src/
 COPY benches/ benches/
 COPY crates/ crates/
-COPY apps/ apps/
 COPY firmware/ firmware/
 COPY web/ web/
+COPY *.rs . 2>/dev/null || true
 
-# 5. Ensure web/dist exists
+# 6. Đảm bảo thư mục web/dist tồn tại
 RUN mkdir -p web/dist && \
     if [ ! -f web/dist/index.html ]; then \
       printf '%s\n' \
-        '<!doctype html>' \
-        '<html lang="en">' \
-        '  <head><meta charset="utf-8"><title>ZeroClaw</title></head>' \
-        '  <body><h1>Dashboard Unavailable</h1></body>' \
-        '</html>' > web/dist/index.html; \
+        '<!doctype html><html><head><title>ZeroClaw</title></head><body><h1>Dashboard Unavailable</h1></body></html>' \
+        > web/dist/index.html; \
     fi
 
-# 6. Build final binary (CHỈ BUILD ZEROCLAW)
+# 7. Build binary zeroclaw (chỉ build binary chính)
 RUN cargo build --release --locked --bin zeroclaw \
     && cp target/release/zeroclaw /app/zeroclaw \
     && strip /app/zeroclaw
 
-# 7. Prepare runtime directory structure
+# 8. Chuẩn bị cấu trúc runtime
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
     printf '%s\n' \
         'workspace_dir = "/zeroclaw-data/workspace"' \
@@ -84,7 +78,7 @@ RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
         > /zeroclaw-data/.zeroclaw/config.toml && \
     chown -R 65534:65534 /zeroclaw-data
 
-# ── Stage 2: Production Runtime (Distroless) ─────────────────
+# ── Stage 2: Production Runtime ──────────────────────────────
 FROM gcr.io/distroless/cc-debian13:nonroot@sha256:84fcd3c223b144b0cb6edc5ecc75641819842a9679a3a58fd6294bec47532bf7 AS release
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
