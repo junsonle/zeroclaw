@@ -14,13 +14,6 @@ FROM rust:1.94-slim@sha256:da9dab7a6b8dd428e71718402e97207bb3e54167d37b570861605
 WORKDIR /app
 ARG ZEROCLAW_CARGO_FEATURES="channel-lark,whatsapp-web"
 
-# Install build dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y \
-        pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
 # 1. Copy manifests to cache dependencies
 COPY Cargo.toml Cargo.lock ./
 # Include every workspace member: Cargo.lock is generated for the full workspace.
