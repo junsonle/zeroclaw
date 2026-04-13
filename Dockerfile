@@ -5,56 +5,53 @@ FROM rust:1.93-slim@sha256:9663b80a1621253d30b146454f903de48f0af925c967be48c8474
 
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies (KHÔNG cache mount)
 RUN apt-get update && apt-get install -y \
         pkg-config \
+        libssl-dev \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # 1. Copy manifests to cache dependencies
 COPY Cargo.toml Cargo.lock ./
 COPY crates/robot-kit/Cargo.toml crates/robot-kit/Cargo.toml
-# Create dummy targets declared in Cargo.toml so manifest parsing succeeds.
+
+# Create dummy targets
 RUN mkdir -p src benches crates/robot-kit/src \
     && echo "fn main() {}" > src/main.rs \
     && echo "fn main() {}" > benches/agent_benchmarks.rs \
     && echo "pub fn placeholder() {}" > crates/robot-kit/src/lib.rs
-RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
-    --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
-    --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
-    cargo build --release --locked
+
+# Build dependencies (KHÔNG cache mount)
+RUN cargo build --release --locked || true
+
+# Xóa dummy source
 RUN rm -rf src benches crates/robot-kit/src
 
-# 2. Copy only build-relevant source paths (avoid cache-busting on docs/tests/scripts)
+# 2. Copy source thật
 COPY src/ src/
 COPY benches/ benches/
 COPY crates/ crates/
 COPY firmware/ firmware/
 COPY web/ web/
-# Keep release builds resilient when frontend dist assets are not prebuilt in Git.
+
+# Tạo web/dist tạm nếu thiếu
 RUN mkdir -p web/dist && \
     if [ ! -f web/dist/index.html ]; then \
       printf '%s\n' \
         '<!doctype html>' \
         '<html lang="en">' \
-        '  <head>' \
-        '    <meta charset="utf-8" />' \
-        '    <meta name="viewport" content="width=device-width,initial-scale=1" />' \
-        '    <title>ZeroClaw Dashboard</title>' \
-        '  </head>' \
-        '  <body>' \
-        '    <h1>ZeroClaw Dashboard Unavailable</h1>' \
-        '    <p>Frontend assets are not bundled in this build. Build the web UI to populate <code>web/dist</code>.</p>' \
-        '  </body>' \
+        '  <head><meta charset="utf-8"><title>ZeroClaw</title></head>' \
+        '  <body><h1>Dashboard Unavailable</h1></body>' \
         '</html>' > web/dist/index.html; \
     fi
-RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
-    --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
-    --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
-    cargo build --release --locked && \
-    cp target/release/zeroclaw /app/zeroclaw && \
-    strip /app/zeroclaw
 
-# Prepare runtime directory structure and default config inline (no extra stage)
+# Build binary cuối cùng (KHÔNG cache mount)
+RUN cargo build --release --locked \
+    && cp target/release/zeroclaw /app/zeroclaw \
+    && strip /app/zeroclaw
+
+# Prepare runtime directory
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
     printf '%s\n' \
         'workspace_dir = "/zeroclaw-data/workspace"' \
@@ -71,55 +68,15 @@ RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
         > /zeroclaw-data/.zeroclaw/config.toml && \
     chown -R 65534:65534 /zeroclaw-data
 
-# ── Stage 2: Development Runtime (Debian) ────────────────────
-FROM debian:trixie-slim@sha256:f6e2cfac5cf956ea044b4bd75e6397b4372ad88fe00908045e9a0d21712ae3ba AS dev
-
-# Install essential runtime dependencies only (use docker-compose.override.yml for dev tools)
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /zeroclaw-data /zeroclaw-data
-COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
-
-# Overwrite minimal config with DEV template (Ollama defaults)
-COPY dev/config.template.toml /zeroclaw-data/.zeroclaw/config.toml
-RUN chown 65534:65534 /zeroclaw-data/.zeroclaw/config.toml
-
-# Environment setup
-# Use consistent workspace path
-ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
-ENV HOME=/zeroclaw-data
-# Defaults for local dev (Ollama) - matches config.template.toml
-ENV PROVIDER="ollama"
-ENV ZEROCLAW_MODEL="llama3.2"
-ENV ZEROCLAW_GATEWAY_PORT=42617
-
-# Note: API_KEY is intentionally NOT set here to avoid confusion.
-# It is set in config.toml as the Ollama URL.
-
-WORKDIR /zeroclaw-data
-USER 65534:65534
-EXPOSE 42617
-ENTRYPOINT ["zeroclaw"]
-CMD ["gateway"]
-
-# ── Stage 3: Production Runtime (Distroless) ─────────────────
+# ── Stage 2: Production Runtime (Distroless) ─────────────────
 FROM gcr.io/distroless/cc-debian13:nonroot@sha256:84fcd3c223b144b0cb6edc5ecc75641819842a9679a3a58fd6294bec47532bf7 AS release
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
 
-# Environment setup
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV HOME=/zeroclaw-data
-# Default provider and model are set in config.toml, not here,
-# so config file edits are not silently overridden
-#ENV PROVIDER=
 ENV ZEROCLAW_GATEWAY_PORT=42617
-
-# API_KEY must be provided at runtime!
 
 WORKDIR /zeroclaw-data
 USER 65534:65534
