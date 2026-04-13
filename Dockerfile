@@ -38,6 +38,10 @@ COPY src/ src/
 COPY benches/ benches/
 COPY *.rs .
 RUN touch src/main.rs
+# Build binary (bước bị thiếu)
+RUN cargo build --release --features ${ZEROCLAW_CARGO_FEATURES} \
+    && cp target/release/zeroclaw /app/zeroclaw
+    
 RUN size=$(stat -c%s /app/zeroclaw) && \
     if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes), likely dummy build artifact" && exit 1; fi
 
