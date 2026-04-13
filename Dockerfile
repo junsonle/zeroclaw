@@ -19,7 +19,7 @@ COPY crates/aardvark-sys/Cargo.toml crates/aardvark-sys/Cargo.toml
 COPY crates/zeroclaw-macros/Cargo.toml crates/zeroclaw-macros/Cargo.toml
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 
-# 2. Tạo dummy source để cache dependencies (bao gồm cả apps/tauri)
+# 2. Tạo dummy source cho tất cả workspace members
 RUN mkdir -p src benches \
     crates/robot-kit/src \
     crates/aardvark-sys/src \
@@ -34,13 +34,13 @@ RUN mkdir -p src benches \
     && echo "fn main() {}" > apps/tauri/build.rs \
     && echo "pub fn placeholder() {}" > apps/tauri/src/lib.rs
 
-# 3. Build dependencies (cache trick, bỏ qua lỗi nếu có)
+# 3. Build dependencies (cache trick)
 RUN cargo build --release --locked --bin zeroclaw || true
 
-# 4. Xóa dummy source của các crate chính, NHƯNG GIỮ LẠI apps/tauri/src
+# 4. Xóa dummy source của các crate chính (giữ lại apps/tauri/src)
 RUN rm -rf src benches crates/robot-kit/src crates/aardvark-sys/src crates/zeroclaw-macros/src
 
-# 5. Copy source thật (CHÚ Ý: KHÔNG copy apps/)
+# 5. Copy source thật (CHÚ Ý: KHÔNG COPY apps/)
 COPY src/ src/
 COPY benches/ benches/
 COPY crates/ crates/
@@ -56,7 +56,7 @@ RUN mkdir -p web/dist && \
         > web/dist/index.html; \
     fi
 
-# 7. Build binary zeroclaw (chỉ build binary chính)
+# 7. Build binary zeroclaw
 RUN cargo build --release --locked --bin zeroclaw \
     && cp target/release/zeroclaw /app/zeroclaw \
     && strip /app/zeroclaw
